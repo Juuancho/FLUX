@@ -36,25 +36,21 @@ Throughout this document:
 
 The Gaussian filter convolves the input image with a discretized 2D Gaussian kernel:
 
-$$
-G(u, v; \sigma) = \frac{1}{2\pi\sigma^2} \exp\left(-\frac{u^2 + v^2}{2\sigma^2}\right)
-$$
+$$G(u, v; \sigma) = \frac{1}{2\pi\sigma^2} \exp\left(-\frac{u^2 + v^2}{2\sigma^2}\right)$$
 
 The filtered image is:
 
-$$
-I'(x, y) = (I * G)(x, y) = \sum_{u=-k}^{k} \sum_{v=-k}^{k} I(x - u, y - v) \cdot G(u, v; \sigma)
-$$
+$$I'(x, y) = (I * G)(x, y) = \sum_{u=-k}^{k} \sum_{v=-k}^{k} I(x - u, y - v) \cdot G(u, v; \sigma)$$
 
 In practice, the continuous Gaussian is sampled on the integer kernel grid and then normalized so that the kernel sums to 1, ensuring the filter preserves the total flux of the image.
 
 ### Kernel Size
 
-The kernel half-width $k$ should be at least $3\sigma$ to avoid truncation artifacts. FLUX's default behavior, when `kernel_size: 0` is configured, is to compute:
+The kernel half-width $k$ should be at least $3\sigma$ to avoid truncation artifacts. FLUX's default behavior when `kernel_size: 0` is configured computes:
 
-$$
-k = \lceil 3\sigma \rceil, \quad \text{kernel\_size} = 2k + 1
-$$
+$$k = \lceil 3\sigma \rceil$$
+
+$$\text{kernel size} = 2k + 1$$
 
 For example, $\sigma = 1.0$ produces a $7 \times 7$ kernel; $\sigma = 1.5$ produces a $9 \times 9$ kernel.
 
@@ -80,7 +76,7 @@ These properties are exploited in the FLUX implementation for performance.
 
 ### Use Case
 
-Effective for general-purpose smoothing of additive Gaussian noise — the dominant noise model for read noise in CCD sensors at moderate exposure times. **Not** appropriate for impulse noise (dead pixels, cosmic rays), which should be handled by the median filter or sigma clipping.
+Effective for general-purpose smoothing of additive Gaussian noise — the dominant noise model for read noise in CCD sensors at moderate exposure times. Not appropriate for impulse noise (dead pixels, cosmic rays), which should be handled by the median filter or sigma clipping.
 
 ---
 
@@ -90,21 +86,19 @@ Effective for general-purpose smoothing of additive Gaussian noise — the domin
 
 The median filter is a non-linear filter that replaces each pixel with the median of its neighborhood:
 
-$$
-I'(x, y) = \mathrm{median} \left\{ I(x + u, y + v) \;\middle|\; -k \leq u, v \leq k \right\}
-$$
+$$I'(x, y) = \text{median} \left( \{ I(x + u, y + v) : -k \leq u \leq k, \; -k \leq v \leq k \} \right)$$
 
 where the median is computed over a $(2k+1) \times (2k+1)$ window. For a window of $n = (2k+1)^2$ pixels, the median is the value at position $\lceil n/2 \rceil$ in the sorted list of the window's pixel values.
 
 ### Why Median Beats Gaussian for Impulse Noise
 
-Consider a pixel corrupted by a cosmic ray: its value may be 100x the local mean. Under Gaussian smoothing, that outlier is *averaged* with its neighbors, contaminating the entire neighborhood by a fraction of its energy. Under median filtering, the outlier is *discarded*, because the median is dominated by the bulk of normal-valued pixels in the window.
+Consider a pixel corrupted by a cosmic ray: its value may be 100x the local mean. Under Gaussian smoothing, that outlier is averaged with its neighbors, contaminating the entire neighborhood by a fraction of its energy. Under median filtering, the outlier is discarded, because the median is dominated by the bulk of normal-valued pixels in the window.
 
 Formally, the median is the **maximum-likelihood estimator of the central tendency under Laplace-distributed noise**, which has heavier tails than Gaussian noise. Impulse noise is well-modeled by such heavy-tailed distributions.
 
 ### Edge Preservation
 
-A key property of the median filter is that it preserves sharp edges, unlike Gaussian smoothing, which blurs them. If a window straddles a sharp transition, the median selects a value from one side of the transition, not an interpolated mean. Mathematically, the median of the window is a member of the window — never a synthesized value — so it cannot create intermediate intensities that do not exist in the original image.
+A key property of the median filter is that it preserves sharp edges, unlike Gaussian smoothing, which blurs them. If a window straddles a sharp transition, the median selects a value from one side of the transition, not an interpolated mean. The median of the window is always a member of the window — never a synthesized value — so it cannot create intermediate intensities that do not exist in the original image.
 
 This property is critical for gravitational lens detection: the thin arcs that signal a strong lens are sharp, low-contrast features that Gaussian filtering can wash out.
 
@@ -130,32 +124,29 @@ Let $\Omega$ denote the set of all pixel coordinates, and $M_i \subseteq \Omega$
 
 **Iterate** for $i = 0, 1, 2, \ldots$:
 
-1. Compute statistics over the unmasked set:
-   $$
-   \mu_i = \frac{1}{|M_i|} \sum_{(x,y) \in M_i} I(x, y), \qquad
-   \sigma_i = \sqrt{ \frac{1}{|M_i|} \sum_{(x,y) \in M_i} \left( I(x, y) - \mu_i \right)^2 }
-   $$
+**Step 1.** Compute statistics over the unmasked set:
 
-2. Identify outliers:
-   $$
-   M_{i+1} = \left\{ (x, y) \in M_i \;\middle|\; \left| I(x, y) - \mu_i \right| \leq \sigma_t \cdot \sigma_i \right\}
-   $$
+$$\mu_i = \frac{1}{|M_i|} \sum_{(x,y) \in M_i} I(x, y)$$
 
-3. **Stop** if $M_{i+1} = M_i$ (converged) or $i + 1 \geq i_{\max}$.
+$$\sigma_i = \sqrt{ \frac{1}{|M_i|} \sum_{(x,y) \in M_i} ( I(x, y) - \mu_i )^2 }$$
 
-**Replace** each pixel in $\Omega \setminus M_{\mathrm{final}}$ (the rejected pixels) according to the configured `replace_with` strategy:
+**Step 2.** Identify and remove outliers. The updated mask $M_{i+1}$ retains only pixels within the threshold:
+
+$$M_{i+1} = \{ (x, y) \in M_i : | I(x, y) - \mu_i | \leq \sigma_t \cdot \sigma_i \}$$
+
+**Step 3.** Stop if $M_{i+1} = M_i$ (converged) or $i + 1 \geq i_{\max}$.
+
+**Replace** each pixel in $\Omega \setminus M_{\text{final}}$ (the rejected pixels) according to the configured `replace_with` strategy:
 
 - `median`: substitute the median of the local $5 \times 5$ neighborhood
-- `mean`: substitute $\mu_{\mathrm{final}}$
+- `mean`: substitute $\mu_{\text{final}}$
 - `zero`: substitute 0
 
 ### Choice of $\sigma_t$
 
-The threshold $\sigma_t$ controls aggressiveness. For a perfectly Gaussian noise distribution, the fraction of pixels rejected as a function of $\sigma_t$ follows the Q-function:
+The threshold $\sigma_t$ controls aggressiveness. For a perfectly Gaussian noise distribution, the fraction of pixels rejected as a function of $\sigma_t$ follows the complementary error function:
 
-$$
-P\left( \left| X \right| > \sigma_t \right) = 2 \cdot Q(\sigma_t) = \mathrm{erfc}\left( \sigma_t / \sqrt{2} \right)
-$$
+$$P( |X| > \sigma_t ) = \text{erfc}( \sigma_t / \sqrt{2} )$$
 
 | $\sigma_t$ | Expected rejection rate |
 |---|---|
@@ -185,23 +176,21 @@ The standard tool for cosmic ray rejection in single-exposure images. Used as th
 
 Wavelet denoising decomposes the image into multiple resolution levels using a wavelet transform, applies a thresholding operation to the detail coefficients to suppress noise, and reconstructs the image. The full procedure is:
 
-**Decomposition.** The 2D discrete wavelet transform decomposes $I$ into one approximation image $A_L$ (the low-frequency content at the deepest level $L$) and a set of detail images $\{D_\ell^h, D_\ell^v, D_\ell^d\}$ for each level $\ell = 1, 2, \ldots, L$, capturing horizontal, vertical, and diagonal high-frequency structure respectively:
+**Decomposition.** The 2D discrete wavelet transform decomposes $I$ into one approximation image $A_L$ at the deepest level $L$, and a set of detail images at each level $\ell = 1, 2, \ldots, L$, capturing horizontal ($h$), vertical ($v$), and diagonal ($d$) high-frequency structure:
 
-$$
-I \;\;\xrightarrow{\;\;\mathrm{DWT}\;\;}\;\; \left( A_L,\; \{D_\ell^h, D_\ell^v, D_\ell^d\}_{\ell=1}^{L} \right)
-$$
+$$I \;\xrightarrow{\text{DWT}}\; \left( A_L,\; \{ D_\ell^h, D_\ell^v, D_\ell^d \}_{\ell=1}^{L} \right)$$
 
 **Thresholding.** Each detail coefficient $d$ is replaced by $T(d, \lambda)$, where $\lambda$ is a level-dependent threshold and $T$ is the thresholding function:
 
-- **Soft thresholding:**
-  $$
-  T_{\mathrm{soft}}(d, \lambda) = \mathrm{sign}(d) \cdot \max\left( |d| - \lambda,\; 0 \right)
-  $$
+Soft thresholding:
 
-- **Hard thresholding:**
-  $$
-  T_{\mathrm{hard}}(d, \lambda) = \begin{cases} d & \text{if } |d| > \lambda \\ 0 & \text{otherwise} \end{cases}
-  $$
+$$T_{\text{soft}}(d, \lambda) = \text{sign}(d) \cdot \max( |d| - \lambda, \; 0 )$$
+
+Hard thresholding:
+
+$$T_{\text{hard}}(d, \lambda) = d \cdot \mathbf{1}[|d| > \lambda]$$
+
+where $\mathbf{1}[\cdot]$ is the indicator function (1 if the condition holds, 0 otherwise).
 
 **Reconstruction.** The thresholded coefficients are passed through the inverse DWT to produce the denoised image $I'$.
 
@@ -220,24 +209,22 @@ For gravitational lens images, `db4` is recommended as a balance between localit
 FLUX supports three threshold-selection methods:
 
 **Universal (VisuShrink).** Donoho and Johnstone's universal threshold:
-$$
-\lambda_{\mathrm{visu}} = \sigma_n \sqrt{2 \ln N}
-$$
+
+$$\lambda_{\text{visu}} = \sigma_n \sqrt{2 \ln N}$$
+
 where $\sigma_n$ is the estimated noise standard deviation and $N$ is the number of pixels. Conservative — tends to over-smooth.
 
 **Bayesian (BayesShrink).** Per-subband threshold derived from a generalized Gaussian model of the wavelet coefficients:
-$$
-\lambda_{\mathrm{bayes}} = \frac{\sigma_n^2}{\sigma_X}
-$$
+
+$$\lambda_{\text{bayes}} = \frac{\sigma_n^2}{\sigma_X}$$
+
 where $\sigma_X$ is the estimated standard deviation of the noiseless signal in that subband. Adaptive — preserves more detail than VisuShrink. **FLUX default.**
 
 **Fixed.** A user-specified value, useful when noise statistics are known a priori from instrument calibration.
 
 The noise standard deviation $\sigma_n$ is estimated robustly from the diagonal detail coefficients at the finest level using the median absolute deviation:
 
-$$
-\sigma_n = \frac{\mathrm{median}\left( \left| D_1^d \right| \right)}{0.6745}
-$$
+$$\sigma_n = \frac{\text{median}( | D_1^d | )}{0.6745}$$
 
 The factor 0.6745 is the constant that makes this estimator unbiased for Gaussian-distributed coefficients.
 
@@ -249,13 +236,11 @@ For gravitational lens images, the thin arc of a strong lens is a high-frequency
 
 ### Use Case
 
-Final stage of the FLUX preprocessing chain when high-quality denoising is needed and the previous stages have already removed outliers and gross noise. Wavelet denoising is computationally more expensive than Gaussian or median filtering, so it is typically reserved for cases where preserving fine structure is critical.
+Final stage of the FLUX preprocessing chain when high-quality denoising is needed and the previous stages have already removed outliers and gross noise. Computationally more expensive than Gaussian or median filtering, so typically reserved for cases where preserving fine structure is critical.
 
 ---
 
 ## References
-
-Books, papers, and software relied upon in the formulations above.
 
 **Gaussian and Median filters.**
 Gonzalez, R. C. & Woods, R. E. *Digital Image Processing*, 4th edition. Pearson, 2018. Chapters 3 and 5.
@@ -264,7 +249,7 @@ Gonzalez, R. C. & Woods, R. E. *Digital Image Processing*, 4th edition. Pearson,
 Huang, T., Yang, G., & Tang, G. *A Fast Two-Dimensional Median Filtering Algorithm.* IEEE Transactions on Acoustics, Speech, and Signal Processing, 1979.
 
 **Sigma clipping in astronomy.**
-Stetson, P. B. *DAOPHOT: A Computer Program for Crowded-Field Stellar Photometry.* Publications of the Astronomical Society of the Pacific, 1987. Foundational reference for iterative clipping in astronomical photometry.
+Stetson, P. B. *DAOPHOT: A Computer Program for Crowded-Field Stellar Photometry.* Publications of the Astronomical Society of the Pacific, 1987.
 
 **Wavelet denoising — VisuShrink and BayesShrink.**
 Donoho, D. L. & Johnstone, I. M. *Ideal Spatial Adaptation by Wavelet Shrinkage.* Biometrika, 1994.
