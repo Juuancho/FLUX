@@ -222,23 +222,31 @@ For these reasons, Richardson-Lucy is a configurable option in FLUX rather than 
 ## References
 
 **Original Richardson-Lucy formulation.**
-Richardson, W. H. *Bayesian-Based Iterative Method of Image Restoration.* Journal of the Optical Society of America, 1972.
-Lucy, L. B. *An Iterative Technique for the Rectification of Observed Distributions.* The Astronomical Journal, 1974.
+- Richardson, W. H. *Bayesian-Based Iterative Method of Image Restoration.* Journal of the Optical Society of America, 1972.
+- Lucy, L. B. *An Iterative Technique for the Rectification of Observed Distributions.* The Astronomical Journal, 1974.
 
 **EM derivation under Poisson noise.**
-Shepp, L. A. & Vardi, Y. *Maximum Likelihood Reconstruction for Emission Tomography.* IEEE Transactions on Medical Imaging, 1982.
+- Shepp, L. A. & Vardi, Y. *Maximum Likelihood Reconstruction for Emission Tomography.* IEEE Transactions on Medical Imaging, 1982.
 
 **Total Variation regularization for Richardson-Lucy.**
-Dey, N., Blanc-Féraud, L., Zimmer, C., Roux, P., Kam, Z., Olivo-Marin, J.-C., & Zerubia, J. *Richardson-Lucy Algorithm with Total Variation Regularization for 3D Confocal Microscope Deconvolution.* Microscopy Research and Technique, 2006.
+- Dey, N., Blanc-Féraud, L., Zimmer, C., Roux, P., Kam, Z., Olivo-Marin, J.-C., & Zerubia, J. *Richardson-Lucy Algorithm with Total Variation Regularization for 3D Confocal Microscope Deconvolution.* Microscopy Research and Technique, 2006.
 
 **Convergence properties and noise amplification.**
-Bertero, M. & Boccacci, P. *Introduction to Inverse Problems in Imaging.* Institute of Physics Publishing, 1998. Chapter 6 covers Richardson-Lucy convergence in detail.
+- Bertero, M. & Boccacci, P. *Introduction to Inverse Problems in Imaging.* Institute of Physics Publishing, 1998. Chapter 6 covers Richardson-Lucy convergence in detail.
 
 **PSF estimation in astronomy.**
-Bertin, E. *Automated Morphometry with SExtractor and PSFEx.* In *Astronomical Data Analysis Software and Systems XX*, 2011.
+- Bertin, E. *Automated Morphometry with SExtractor and PSFEx.* In *Astronomical Data Analysis Software and Systems XX*, 2011.
+
+**Modern applications and extensions in astronomy.**
+- Sureau, F., Lechat, A., & Starck, J.-L. *Deep learning for a space-variant deconvolution in galaxy surveys.* Astronomy & Astrophysics, 2020. Deep-learning-based deconvolution baseline for survey-scale galaxy images.
+- Akhaury, U., Jablonka, P., Starck, J.-L., et al. *Deep learning-based deconvolution for HST images.* Astronomy & Astrophysics, 2022. Application of learned deconvolution methods on Hubble Space Telescope data, demonstrating the limits of classical Richardson-Lucy.
+- Michalewicz, K., et al. *STARRED: a wavelet-based two-channel deconvolution method.* Journal of Open Source Software, 2023. Modern wavelet-regularized variant of Richardson-Lucy specifically designed for astronomical light-curve extraction.
+- Donath, A., et al. *Joint deconvolution of astronomical observations.* arXiv:2310.16919, 2023. Multi-image extension of Richardson-Lucy applied to combined HST and ground-based data.
+- Zerbi, A., et al. *Joint multiband deconvolution for Euclid and Vera C. Rubin images.* arXiv:2502.17177, 2025. Recent Rubin-specific application directly relevant to FLUX's target use case.
 
 **Implementation references.**
-The FLUX implementation builds on `scipy.signal.fftconvolve` and `numpy` for the core operations.
+
+The FLUX implementation builds on `scipy.signal.fftconvolve` and `numpy` for the core operations. The TV regularization variant follows the formulation of Dey et al. (2006) cited above.
 
 ---
 

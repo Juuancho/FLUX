@@ -50,7 +50,7 @@ FLUX is structured as **three independent processing phases** connected by **bou
                             └─────────────────────────────┘
 ```
 
-The system has three external surfaces: the **YAML configuration** (input contract), the **PyTorch DataLoader** produced by Phase C (output contract), and the **structured error bus** (observability contract). Everything else is internal and replaceable.
+The system exposes three external surfaces: the **YAML configuration** (input contract), the **PyTorch DataLoader** produced by Phase C (output contract), and the **structured error bus** (observability contract). All other components are internal and replaceable.
 
 ---
 
@@ -219,6 +219,8 @@ FLUX is designed to never fail catastrophically on a single bad input. Failures 
 - **Configuration errors** — invalid YAML, missing fields, type mismatches. Pipeline fails fast at startup, before any data is fetched. This is intentional — a misconfigured pipeline should not silently produce garbage.
 - **Out-of-memory errors** — non-recoverable. Logged and re-raised. Mitigated by bounded queues and Dask chunking, but ultimately a hardware concern.
 
+Architectural changes to this fault-tolerance model — including changes to error categories, retry policies, or the structure of error bus events — require an RFC. See [RFC_PROCESS.md](RFC_PROCESS.md) for the procedure and [docs/rfcs/](rfcs/) for active proposals.
+
 ### Error bus
 
 All non-fatal errors flow into a structured **error bus** — a logger with JSON output that records:
@@ -304,7 +306,7 @@ RIPPLe (GSoC 2025) is the direct predecessor of FLUX. It established the foundat
 | Super-resolution | Not directly supported | First-class via task adapters |
 | Real LSST data | Synchronous fetch | Async-ready (mock now, real Butler in v0.2) |
 
-FLUX is **not a rewrite** of RIPPLe. The YAML configuration layer is intentionally compatible, and a migration guide will be published with v0.2.
+FLUX preserves backward compatibility with RIPPLe configurations rather than replacing them. The YAML configuration layer is intentionally compatible, and a migration guide will be published with v0.2.
 
 ---
 
@@ -339,7 +341,7 @@ flux/
 └── __init__.py
 ```
 
-Each subpackage has its own `__init__.py` exposing the public API. Internal helpers are prefixed with underscore. This layout is enforced by the import linter rules described in [CONTRIBUTING.md](../CONTRIBUTING.md).
+Each subpackage exposes its public API through `__init__.py`. Internal helpers are prefixed with underscore. The layout is enforced by the import linter rules described in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 

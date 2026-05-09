@@ -83,10 +83,14 @@ flux/
 │   │   ├── extractor.md
 │   │   ├── preprocessor.md
 │   │   └── ml_bridge.md
-│   └── math/
-│       ├── filters.md
-│       ├── normalization.md
-│       └── psf_deconvolution.md
+│   ├── math/
+│   │   ├── filters.md
+│   │   ├── normalization.md
+│   │   └── psf_deconvolution.md
+│   └── rfcs/
+│       ├── 0000-template.md
+│       └── README.md
+│ 
 ├── flux/                  # source code
 ├── configs/               # example YAML configurations
 ├── tests/                 # pytest suite
@@ -133,4 +137,4 @@ Systems Engineering, Corporación Universitaria Rafael Núñez
 
 ---
 
-*FLUX is an independent research and engineering project, not officially affiliated with ML4SCI, DeepLense, or the Rubin Observatory. It is built to be compatible with their open ecosystems.*
+*FLUX is an independent research and engineering project, not officially affiliated with ML4SCI, DeepLense, or the Rubin Observatory. The project is designed for compatibility with their open ecosystems.*

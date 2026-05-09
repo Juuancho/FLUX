@@ -270,19 +270,24 @@ This merge is associative and commutative, so workers can finish in any order wi
 ## References
 
 **Welford's algorithm.**
-Welford, B. P. *Note on a Method for Calculating Corrected Sums of Squares and Products.* Technometrics, 1962. The original publication.
+- Welford, B. P. *Note on a Method for Calculating Corrected Sums of Squares and Products.* Technometrics, 1962. The original publication.
 
 **Parallel merge for streaming variance.**
-Chan, T. F., Golub, G. H., & LeVeque, R. J. *Updating Formulae and a Pairwise Algorithm for Computing Sample Variances.* Stanford Technical Report STAN-CS-79-773, 1979.
+- Chan, T. F., Golub, G. H., & LeVeque, R. J. *Updating Formulae and a Pairwise Algorithm for Computing Sample Variances.* Stanford Technical Report STAN-CS-79-773, 1979.
 
 **Numerical stability analysis.**
-Higham, N. J. *Accuracy and Stability of Numerical Algorithms*, 2nd edition. SIAM, 2002. Chapter 1 covers the stability of variance computation in detail.
+- Higham, N. J. *Accuracy and Stability of Numerical Algorithms*, 2nd edition. SIAM, 2002. Chapter 1 covers the stability of variance computation in detail.
 
 **Z-score in deep learning preprocessing.**
-LeCun, Y., Bottou, L., Orr, G. B., & Müller, K.-R. *Efficient BackProp.* In *Neural Networks: Tricks of the Trade*, Springer, 1998. Foundational reference for the role of input normalization in training deep networks.
+- LeCun, Y., Bottou, L., Orr, G. B., & Müller, K.-R. *Efficient BackProp.* In *Neural Networks: Tricks of the Trade*, Springer, 1998. Foundational reference for the role of input normalization in training deep networks.
+
+**Normalization in modern astronomical ML pipelines.**
+- Pearson, J. et al. *GraViT: Transfer Learning with Vision Transformers and MLP-Mixer for Strong Gravitational Lens Discovery.* MNRAS, 2025 (arXiv:2509.00226). Includes a study of how normalization choices interact with transfer learning performance on LSST-shaped data.
+- Madireddy, S. et al. *A Modular Deep Learning Pipeline for Galaxy-Scale Strong Gravitational Lens Detection and Modeling.* arXiv:1911.03867 (LSST DESC). Discusses per-channel normalization in the context of LSST DC2 simulated multi-band data.
 
 **Implementation references.**
-The FLUX implementation builds on `numpy` for vectorized accumulation and `dask` for the parallel merge.
+
+The FLUX implementation builds on `numpy` for vectorized accumulation and `dask` for the parallel merge across distributed workers.
 
 ---
 

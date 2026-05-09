@@ -243,23 +243,29 @@ Final stage of the FLUX preprocessing chain when high-quality denoising is neede
 ## References
 
 **Gaussian and Median filters.**
-Gonzalez, R. C. & Woods, R. E. *Digital Image Processing*, 4th edition. Pearson, 2018. Chapters 3 and 5.
+- Gonzalez, R. C. & Woods, R. E. *Digital Image Processing*, 4th edition. Pearson, 2018. Chapters 3 and 5.
 
 **Median filter sliding-window algorithm.**
-Huang, T., Yang, G., & Tang, G. *A Fast Two-Dimensional Median Filtering Algorithm.* IEEE Transactions on Acoustics, Speech, and Signal Processing, 1979.
+- Huang, T., Yang, G., & Tang, G. *A Fast Two-Dimensional Median Filtering Algorithm.* IEEE Transactions on Acoustics, Speech, and Signal Processing, 1979.
 
 **Sigma clipping in astronomy.**
-Stetson, P. B. *DAOPHOT: A Computer Program for Crowded-Field Stellar Photometry.* Publications of the Astronomical Society of the Pacific, 1987.
+- Stetson, P. B. *DAOPHOT: A Computer Program for Crowded-Field Stellar Photometry.* Publications of the Astronomical Society of the Pacific, 1987.
 
 **Wavelet denoising — VisuShrink and BayesShrink.**
-Donoho, D. L. & Johnstone, I. M. *Ideal Spatial Adaptation by Wavelet Shrinkage.* Biometrika, 1994.
-Chang, S. G., Yu, B., & Vetterli, M. *Adaptive Wavelet Thresholding for Image Denoising and Compression.* IEEE Transactions on Image Processing, 2000.
+- Donoho, D. L. & Johnstone, I. M. *Ideal Spatial Adaptation by Wavelet Shrinkage.* Biometrika, 1994.
+- Chang, S. G., Yu, B., & Vetterli, M. *Adaptive Wavelet Thresholding for Image Denoising and Compression.* IEEE Transactions on Image Processing, 2000.
 
 **Daubechies wavelets.**
-Daubechies, I. *Ten Lectures on Wavelets.* SIAM, 1992.
+- Daubechies, I. *Ten Lectures on Wavelets.* SIAM, 1992.
+
+**Modern applications in astronomical machine learning.**
+- Madireddy, S., Li, N., Ramachandra, N., Butler, J., Balaprakash, P., Habib, S., & Heitmann, K. *A Modular Deep Learning Pipeline for Galaxy-Scale Strong Gravitational Lens Detection and Modeling.* arXiv:1911.03867 (LSST DESC). A reference example of preprocessing modules (denoising, deblending) integrated into a deep learning pipeline for strong lensing detection.
+- Pearson, J. et al. *GraViT: Transfer Learning with Vision Transformers and MLP-Mixer for Strong Gravitational Lens Discovery.* MNRAS, 2025 (arXiv:2509.00226). Recent systematic study of preprocessing choices — augmentation, normalization, optimization — for ViT-based lens classifiers in preparation for LSST.
+- Vojtekova, A., et al. *A comparative analysis of denoising algorithms for extragalactic imaging surveys.* Astronomy & Astrophysics, 2020. Empirical comparison of wavelet, total variation, NL-means, and Gaussian denoisers on extragalactic survey images, with PSNR/SSIM benchmarks across noise regimes.
 
 **Implementation references.**
-The FLUX implementation builds on `scipy.ndimage` (Gaussian, median), `astropy.stats.sigma_clip`, and `pywavelets` (DWT and thresholding).
+
+The FLUX implementation builds on `scipy.ndimage` (Gaussian, median), `astropy.stats.sigma_clip`, and `pywavelets` (DWT and thresholding). The wavelet thresholding strategies (BayesShrink, VisuShrink) follow the API of `scikit-image.restoration.denoise_wavelet`.
 
 ---
 

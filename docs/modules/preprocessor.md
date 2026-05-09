@@ -33,7 +33,7 @@ It is explicitly **not** responsible for:
 - Deciding which transformations are scientifically appropriate — that is the user's responsibility, encoded in the YAML configuration
 - Modifying the original `RawFrame` — `RawFrame` is immutable; transformations produce new arrays
 
-This phase is where the 2023 DeepLense Model IV failure originated. Real observational data was passed to models without proper noise handling, and the models collapsed. The Preprocessor exists to ensure that does not happen again.
+This phase addresses the failure mode observed in the 2023 DeepLense Model IV experiment, where real observational data passed to models without proper noise handling caused the models to collapse to random-chance performance.
 
 ---
 
@@ -83,7 +83,7 @@ Two design notes:
 
 The purity requirement (**same input → same output, no global state**) is enforced by the contract test suite. Transforms that depend on external state (random number generators, mutable shared variables) violate this contract and break Dask parallelization.
 
-The `estimate_memory_overhead` method matters for `fast` mode. PSF deconvolution, for example, allocates working arrays roughly 4x the size of the input. Returning that estimate lets Dask choose chunk sizes that do not OOM the worker.
+The `estimate_memory_overhead` method is consulted in `fast` mode. PSF deconvolution, for example, allocates working arrays roughly 4x the size of the input. Returning an accurate estimate allows Dask to choose chunk sizes that avoid OOM on the worker.
 
 ---
 
@@ -261,7 +261,7 @@ The enforced order is:
 SigmaClipFilter → MedianFilter → RichardsonLucyDeconvolver → GaussianFilter → WaveletDenoiser
 ```
 
-The reasoning, in scientific terms:
+The justification for each step:
 
 1. **Sigma clipping first.** Outliers (cosmic rays, saturated pixels) must be removed before any operation that uses pixel statistics, because outliers contaminate mean/std calculations. Running sigma clip after any other filter means those filters have already smeared the outliers across neighbor pixels.
 
@@ -273,7 +273,7 @@ The reasoning, in scientific terms:
 
 5. **Wavelet denoising last.** Wavelet methods are sophisticated noise removers that work best on data that is already "well-behaved." They are the polish, not the foundation.
 
-The user can disable any of the five filters individually. The user **cannot** reorder them. If a use case genuinely requires a different order, that is a signal to extend FLUX with a custom ordered pipeline via the [RFC process](../RFC_PROCESS.md), not to subvert this constraint.
+Any of the five filters may be disabled individually via configuration. The order between enabled filters is fixed and cannot be modified through configuration. Use cases that require a different order should be addressed via an [RFC process](../RFC_PROCESS.md) proposing an alternative ordered pipeline.
 
 After the noise filtering chain, **channel handling** runs, then **normalization**, then **tensor conversion**. These three are also fixed in order: you cannot normalize before deciding what channels you have, and you cannot convert to a tensor before normalization without losing dtype precision.
 
@@ -298,7 +298,7 @@ Threads are the default because most filters are NumPy operations that release t
 
 The `chunk_size` parameter balances scheduling overhead (small chunks → too many tasks) against load balancing (large chunks → workers finish at different times). The default of 16 is a good starting point for typical workloads; tuning guidance is in [PERFORMANCE.md](../PERFORMANCE.md).
 
-A critical invariant: **regardless of mode, the order of frames at the output of Phase B is not guaranteed to match the input order**. Frames are tagged by `frame_id` and downstream consumers must not rely on ordering. This is a deliberate consequence of parallelism — enforcing order would serialize the stage and erase the speedup.
+**Frame ordering invariant:** the order of frames at the output of Phase B is not guaranteed to match the input order in either mode. Frames are tagged by `frame_id` and downstream consumers must not rely on ordering. The invariant is a deliberate consequence of parallelism — enforcing order would serialize the stage and erase the speedup.
 
 ---
 

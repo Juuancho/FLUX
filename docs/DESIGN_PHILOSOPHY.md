@@ -50,7 +50,7 @@ The result: Phase A is bottlenecked by network I/O and benefits from `asyncio`. 
 
 ## Decoupling over Cleverness
 
-A common temptation in pipeline design is to "optimize" by sharing state across stages — the Preprocessor reaches into the Extractor to peek at the next file, the ML Bridge tells the Preprocessor to skip a filter. These optimizations always pay off in the short term and always cause maintenance disasters in the long term.
+A common pattern in pipeline design is to share state across stages as an optimization — the Preprocessor reaches into the Extractor to peek at the next file, the ML Bridge tells the Preprocessor to skip a filter. These shortcuts pay off in the short term and cause maintenance disasters in the long term.
 
 FLUX refuses this temptation by enforcing a strict rule: **phases communicate only through the queue interface**. There is no `pipeline.preprocessor.set_filter_for_next_frame()`. There is no shared global state. If Phase B needs information from Phase A, it must arrive in the `RawFrame` metadata, full stop.
 
@@ -96,7 +96,7 @@ This decision is forced by the target use case: LSST surveys are measured in pet
 
 The architectural consequence is that some operations that would be trivial on a fully materialized dataset (global statistics, sorting by quality, dataset-wide stratified splits) must be implemented as **streaming algorithms** with bounded memory — for example, normalization statistics use Welford's online algorithm rather than `np.mean`, and any "global" operation either operates on a configurable sample window or is explicitly two-pass.
 
-This is harder, but it is not optional. Materialized pipelines do not scale, and unscalable pipelines are not pipelines — they are scripts.
+The streaming approach is harder to implement but not optional for the project's scale targets. Materialized pipelines do not scale; unscalable pipelines are scripts, not pipelines.
 
 ---
 

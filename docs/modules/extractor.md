@@ -72,11 +72,9 @@ class DataSource(ABC):
         return None
 ```
 
-Two design notes about this interface:
+The `fetch` method returns an `AsyncIterator`, not a list. This is required for bounded-memory streaming on arbitrarily large surveys. Implementations that load everything into a list before yielding violate the streaming contract documented in [DESIGN_PHILOSOPHY.md](../DESIGN_PHILOSOPHY.md).
 
-The `fetch` method returns an `AsyncIterator`, not a list. This is non-negotiable — it is how FLUX achieves bounded-memory streaming for arbitrarily large surveys. Implementations that load everything into a list before yielding violate the streaming contract documented in [DESIGN_PHILOSOPHY.md](../DESIGN_PHILOSOPHY.md).
-
-The `estimate_size` method is allowed to return `None` for sources that cannot know their size in advance (live telescope feeds, unbounded queries). Phase B and Phase C must tolerate `None` — they do, by falling back to indefinite progress reporting.
+The `estimate_size` method may return `None` for sources that cannot know their size in advance (live telescope feeds, unbounded queries). Phase B and Phase C tolerate `None` by falling back to indefinite progress reporting.
 
 ---
 
@@ -129,7 +127,7 @@ class Provenance(BaseModel):
     retry_count: int = 0           # how many retries it took to fetch
 ```
 
-Provenance is what makes the error bus actionable. When a frame fails downstream, the user can trace back exactly where it came from and how. This is non-optional in scientific software — reproducibility requires provenance.
+Provenance enables actionable error reports. When a frame fails downstream, the user can trace back exactly where it came from and how. Reproducibility in scientific software requires complete provenance records.
 
 ### `SourceQuery`
 
@@ -329,7 +327,7 @@ SOURCE_REGISTRY.register(
 
 The base test class `tests/extractor/test_source_contract.py` runs every concrete source against a standard suite of behavior tests (immutability, cancellation, error propagation, provenance completeness). Your implementation passes by inheriting from `BaseSourceContractTest` and parametrizing with your config.
 
-This is what allows new sources to be added with confidence — the contract tests guarantee the behavioral invariants the rest of the pipeline depends on.
+The contract tests guarantee the behavioral invariants that the rest of the pipeline depends on, allowing new sources to be added without risk of subtle integration bugs.
 
 ---
 
